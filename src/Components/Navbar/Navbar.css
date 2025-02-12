@@ -406,3 +406,85 @@ body {
     margin-left: 0;
   }
 }
+
+
+/* Modal overlay and content */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+ }
+ 
+ .modal-content {
+  background: #fff;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+ }
+ 
+ .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 10px;
+ }
+ 
+ .modal-header h4 {
+  margin: 0;
+ }
+ 
+ .modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #333;
+ }
+ 
+ /* Status tree styling */
+ .status-tree {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+ }
+ 
+ .status-tree-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+ }
+ 
+ .status-tree-item:last-child {
+  border-bottom: none;
+ }
+ 
+ .tree-icon {
+  margin-right: 8px;
+  color: #6c757d;
+ }
+ 
+
+ 
+ .status-indicator i {
+  font-size: 1rem;
+ }
+ 
+ .active-icon {
+  color: green;
+ }
+ 
+ .inactive-icon {
+  color: red;
+ }
+ 
