@@ -29,21 +29,45 @@ const setCache = (key, data) => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
+// Helper to recursively gather visible node ids based on expanded state
+const getVisibleNodeIds = (nodes, expandedState) => {
+  let visibleIds = [];
+  nodes.forEach((node) => {
+    visibleIds.push(node.id);
+    if (expandedState[node.id] && node.children && node.children.length > 0) {
+      visibleIds = visibleIds.concat(getVisibleNodeIds(node.children, expandedState));
+    }
+  });
+  return visibleIds;
+};
+
 const Navbar = () => {
   const [treeData, setTreeData] = useState([]);
   const [nodeStatuses, setNodeStatuses] = useState({});
   const [expanded, setExpanded] = useState({});
   const [activeNodeId, setActiveNodeId] = useState(null);
-  const [showStatusModal, setShowStatusModal] = useState(false);
   const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth > 425);
+  // Notifications stored as objects: { id, message, type }
+  const [notifications, setNotifications] = useState([]);
   const navbarRef = useRef(null);
+
+  // Refs to store previous state for comparison
+  const prevNodeStatusesRef = useRef({});
+
+  // Helper to add a notification (auto-remove after 5 seconds)
+  const addNotification = (notification) => {
+    setNotifications((prev) => [...prev, notification]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n !== notification));
+    }, 5000);
+  };
 
   const buildTree = (flatArray) => {
     const map = new Map();
     const roots = [];
     
     flatArray.forEach((node) => {
-      // Ensure a fresh node copy with default properties
+      // Create a fresh copy with default properties
       const newNode = { ...node, children: [], hasChildren: false, childrenLoaded: false };
       map.set(node.id, newNode);
     });
@@ -56,16 +80,13 @@ const Navbar = () => {
         const parent = map.get(node.parentId);
         if (parent) {
           parent.children.push(currentNode);
-          parent.hasChildren = true; // Mark the parent as having children
+          parent.hasChildren = true;
         }
       }
     });
   
-    // Return the roots with their expandability set
     return roots;
   };
-  
-  
 
   const flattenTree = (nodes) => {
     let list = [];
@@ -106,13 +127,12 @@ const Navbar = () => {
     });
   };
 
-  // Fetch top-level nodes and initialize tree state
+  // Fetch top-level nodes (first trying cache, then API)
   const fetchTopLevelNodes = async () => {
     try {
       const cacheKey = "topLevelNodes";
       const cachedData = getCache(cacheKey);
       
-      // Check for cached data
       if (cachedData) {
         const tree = buildTree(cachedData);
         setTreeData(tree);
@@ -125,7 +145,7 @@ const Navbar = () => {
         });
       }
   
-      // If no cached data, fetch from API
+      // Always fetch from API to get the latest changes
       const response = await axios.get(API_URL);
       if (response.data) {
         const tree = buildTree(response.data);
@@ -149,7 +169,6 @@ const Navbar = () => {
       const cacheKey = `children_${nodeId}`;
       const cachedData = getCache(cacheKey);
       if (cachedData) {
-        console.log(`Fetched children from cache for node ${nodeId}`, cachedData);
         setTreeData((prevTree) => updateNodeChildren(prevTree, nodeId, cachedData));
         setNodeStatuses((prev) => {
           const updated = { ...prev };
@@ -159,10 +178,8 @@ const Navbar = () => {
           return updated;
         });
       } else {
-        console.log(`No cached data for node ${nodeId}, fetching from backend...`);
         const response = await axios.get(`${API_URL}/children/${nodeId}`);
         if (response.data) {
-          console.log(`Fetched children from backend for node ${nodeId}`, response.data);
           setTreeData((prevTree) => updateNodeChildren(prevTree, nodeId, response.data));
           setNodeStatuses((prev) => {
             const updated = { ...prev };
@@ -190,7 +207,7 @@ const Navbar = () => {
         console.log("Connected to SignalR hub");
         connection.on("ReceiveTreeNode", (newTreeNode) => {
           setTreeData((prevTree) => {
-            // Flatten the existing tree
+            // Flatten the current tree and update or add the node
             const flat = flattenTree(prevTree);
             const updatedFlat = flat.map((node) => 
               node.id === newTreeNode.id 
@@ -198,11 +215,9 @@ const Navbar = () => {
                 : node
             );
   
-            // Check if the node has children based on the received node's data
             const hasChildren = newTreeNode.children && newTreeNode.children.length > 0;
             updatedFlat.push({ ...newTreeNode, hasChildren });
   
-            // Rebuild and return the tree
             return buildTree(updatedFlat);
           });
           
@@ -210,7 +225,6 @@ const Navbar = () => {
             ...prev,
             [newTreeNode.id]: newTreeNode.isActive,
           }));
-          console.log("SignalR - node received/updated:", newTreeNode);
         });
       })
       .catch((err) => console.error("Error while starting SignalR connection: " + err));
@@ -225,20 +239,14 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth > 768) {
-        setIsNavbarOpen(true);
-      }
+      if (window.innerWidth > 768) setIsNavbarOpen(true);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleToggle = async (node, siblings) => {
-    // Determine whether this node is expandable using its properties
-    let isExpandable = node.hasChildren 
-    ?? (!node.childrenLoaded || 
-    (node.children && node.children.length > 0));
-  
+    const isExpandable = node.hasChildren ?? (!node.childrenLoaded || (node.children && node.children.length > 0));
     if (!isExpandable) {
       setActiveNodeId(node.id);
       return;
@@ -248,16 +256,12 @@ const Navbar = () => {
       const newExpanded = { ...prev };
       if (prev[node.id]) {
         const descendantNodes = flattenTree([node]);
-        descendantNodes.forEach((n) => {
-          delete newExpanded[n.id];
-        });
+        descendantNodes.forEach((n) => delete newExpanded[n.id]);
       } else {
         siblings.forEach((sibling) => {
           if (sibling.id !== node.id) {
             const descendantNodes = flattenTree([sibling]);
-            descendantNodes.forEach((n) => {
-              delete newExpanded[n.id];
-            });
+            descendantNodes.forEach((n) => delete newExpanded[n.id]);
           }
         });
         newExpanded[node.id] = true;
@@ -273,7 +277,6 @@ const Navbar = () => {
 
   const renderTree = (node, siblings, level = 0) => {
     const isExpandable = node.children && node.children.length > 0;
-  
     const isExpanded = expanded[node.id];
   
     return (
@@ -290,7 +293,8 @@ const Navbar = () => {
           )}
           <span className="status-indicator">
             <i className={`bi bi-circle-fill ${nodeStatuses[node.id] ? "active-icon" : "inactive-icon"}`}></i>
-          </span>&nbsp;
+          </span>
+          &nbsp;
           <span className="node-title" onClick={() => handleToggle(node, siblings)}>
             {node.label}
           </span>
@@ -308,25 +312,24 @@ const Navbar = () => {
     );
   };
 
-  const renderModalStatus = () => {
-    const activeNode = activeNodeId ? findNodeById(treeData, activeNodeId) : null;
-    if (!activeNode || !activeNode.children || activeNode.children.length === 0) {
-      return <p>No child statuses available</p>;
-    }
-    return (
-      <ul className="status-tree">
-        {activeNode.children.map((child) => (
-          <li key={child.id} className="status-tree-item">
-            <i className="bi bi-caret-right-fill tree-icon"></i>
-            <span className="node-label">{child.label}</span>
-            <span className="status-indicator">
-              <i className={`bi bi-circle-fill ${nodeStatuses[child.id] ? "active-icon" : "inactive-icon"}`}></i>
-            </span>
-          </li>
-        ))}
-      </ul>
-    );
-  };
+  // Only report node status changes for nodes that are currently visible.
+  useEffect(() => {
+    // Compute all visible node ids based on the current tree and expanded state.
+    const visibleIdsSet = new Set(getVisibleNodeIds(treeData, expanded));
+    const prev = prevNodeStatusesRef.current;
+    Object.entries(nodeStatuses).forEach(([id, newStatus]) => {
+      // Only add a notification if this node is visible and its status changed.
+      if (prev[id] !== undefined && prev[id] !== newStatus && visibleIdsSet.has(Number(id))) {
+        const node = findNodeById(treeData, Number(id)) || {};
+        addNotification({
+          id,
+          message: `Node "${node.label || id}" changed from ${prev[id] ? "active" : "inactive"} to ${newStatus ? "active" : "inactive"}`,
+          type: newStatus ? "active" : "inactive",
+        });
+      }
+    });
+    prevNodeStatusesRef.current = nodeStatuses;
+  }, [nodeStatuses, treeData, expanded]);
 
   const activeNode = activeNodeId ? findNodeById(treeData, activeNodeId) : null;
 
@@ -342,37 +345,14 @@ const Navbar = () => {
       <div className={`left-navbar ${isNavbarOpen ? "open" : "closed"}`} ref={navbarRef}>
         {treeData.length > 0 ? treeData.map((node) => renderTree(node, treeData)) : <p>Loading data...</p>}
       </div>
-      {/* <div className="active-status-container">
-        <h4>Active Node Status</h4>
-        {activeNode ? (
-          <p>
-            Node: {activeNode.label}{" "}
-            <span className="status-indicator">
-              <i className={`bi bi-circle-fill ${nodeStatuses[activeNode.id] ? "active-icon" : "inactive-icon"}`}></i>
-            </span>
-          </p>
-        ) : (
-          <p>No node selected</p>
-        )}
-        {activeNode && activeNode.children && activeNode.children.length > 0 && (
-          <button className="status-modal-button" onClick={() => setShowStatusModal(true)}>
-            <i className="bi bi-info-circle"></i> Show Child Statuses
-          </button>
-        )}
-      </div>
-      {showStatusModal && (
-        <div className="modal-overlay" onClick={() => setShowStatusModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h4>Child Statuses</h4>
-              <button className="modal-close" onClick={() => setShowStatusModal(false)}>
-                <i className="bi bi-x-circle"></i>
-              </button>
-            </div>
-            <div className="modal-body">{renderModalStatus()}</div>
+      {/* Notification container in the right side corner */}
+      <div className="notification-container">
+        {notifications.map((notif, index) => (
+          <div key={index} className={`notification ${notif.type}`}>
+            {notif.message}
           </div>
-        </div>
-      )} */}
+        ))}
+      </div>
     </div>
   );
 };
