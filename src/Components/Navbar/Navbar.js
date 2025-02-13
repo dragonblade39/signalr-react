@@ -4,11 +4,9 @@ import { HubConnectionBuilder } from "@microsoft/signalr";
 import "./Navbar.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-// Base API URL and cache expiry time (in milliseconds)
 const API_URL = "https://localhost:7068/api/TreeNodes";
 const CACHE_EXPIRY_MS = 60000;
 
-// --- Cache Helper Functions ---
 const getCache = (key) => {
   const cached = localStorage.getItem(key);
   if (!cached) return null;
@@ -32,21 +30,18 @@ const setCache = (key, data) => {
 };
 
 const Navbar = () => {
-  // State variables
   const [treeData, setTreeData] = useState([]);
-  const [nodeStatuses, setNodeStatuses] = useState({}); // { [nodeId]: boolean }
+  const [nodeStatuses, setNodeStatuses] = useState({});
   const [expanded, setExpanded] = useState({});
   const [activeNodeId, setActiveNodeId] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth > 425);
   const navbarRef = useRef(null);
 
-  // --- Helper: Build a tree from a flat array of nodes ---
   const buildTree = (flatArray) => {
     const map = new Map();
     const roots = [];
     flatArray.forEach((node) => {
-      // Create a fresh copy and ensure a children array exists.
       map.set(node.id, { ...node, children: [] });
     });
     flatArray.forEach((node) => {
@@ -63,7 +58,6 @@ const Navbar = () => {
     return roots;
   };
 
-  // --- Helper: Flatten the tree into an array ---
   const flattenTree = (nodes) => {
     let list = [];
     nodes.forEach((node) => {
@@ -75,7 +69,6 @@ const Navbar = () => {
     return list;
   };
 
-  // --- Helper: Find a node by its id in the tree ---
   const findNodeById = (nodes, id) => {
     for (const node of nodes) {
       if (node.id === id) return node;
@@ -87,8 +80,6 @@ const Navbar = () => {
     return null;
   };
 
-  // --- Helper: Update a node’s children in the tree ---
-  // Also mark the node as having been loaded and update its "hasChildren" flag
   const updateNodeChildren = (nodes, nodeId, children) => {
     return nodes.map((node) => {
       if (node.id === nodeId) {
@@ -96,7 +87,6 @@ const Navbar = () => {
           ...node, 
           children: children, 
           childrenLoaded: true,
-          // Update hasChildren based on the fetched children.
           hasChildren: children.length > 0 
         };
       }
@@ -107,7 +97,6 @@ const Navbar = () => {
     });
   };
 
-  // --- Fetch Top-Level Nodes with Caching ---
   const fetchTopLevelNodes = async () => {
     try {
       const cacheKey = "topLevelNodes";
@@ -139,12 +128,12 @@ const Navbar = () => {
     }
   };
 
-  // --- Fetch Children for a Given Node (Lazy Loading with Caching) ---
   const fetchChildren = async (nodeId) => {
     try {
       const cacheKey = `children_${nodeId}`;
       const cachedData = getCache(cacheKey);
       if (cachedData) {
+        console.log(`Fetched children from cache for node ${nodeId}`, cachedData);
         setTreeData((prevTree) => updateNodeChildren(prevTree, nodeId, cachedData));
         setNodeStatuses((prev) => {
           const updated = { ...prev };
@@ -153,25 +142,27 @@ const Navbar = () => {
           });
           return updated;
         });
-      }
-      const response = await axios.get(`${API_URL}/children/${nodeId}`);
-      if (response.data) {
-        setTreeData((prevTree) => updateNodeChildren(prevTree, nodeId, response.data));
-        setNodeStatuses((prev) => {
-          const updated = { ...prev };
-          response.data.forEach((child) => {
-            updated[child.id] = child.isActive;
+      } else {
+        console.log(`No cached data for node ${nodeId}, fetching from backend...`);
+        const response = await axios.get(`${API_URL}/children/${nodeId}`);
+        if (response.data) {
+          console.log(`Fetched children from backend for node ${nodeId}`, response.data);
+          setTreeData((prevTree) => updateNodeChildren(prevTree, nodeId, response.data));
+          setNodeStatuses((prev) => {
+            const updated = { ...prev };
+            response.data.forEach((child) => {
+              updated[child.id] = child.isActive;
+            });
+            return updated;
           });
-          return updated;
-        });
-        setCache(cacheKey, response.data);
+          setCache(cacheKey, response.data);
+        }
       }
     } catch (error) {
       console.error(`Error fetching children for node ${nodeId}:`, error);
     }
   };
 
-  // --- SignalR Setup & Periodic Refresh ---
   useEffect(() => {
     const connection = new HubConnectionBuilder()
       .withUrl("https://localhost:7068/treeNodeHub", { withCredentials: true })
@@ -187,7 +178,6 @@ const Navbar = () => {
             const exists = flat.some((node) => node.id === newTreeNode.id);
             let updatedFlat;
             if (exists) {
-              // Merge new data into the existing node.
               updatedFlat = flat.map((node) =>
                 node.id === newTreeNode.id ? { ...node, ...newTreeNode } : node
               );
@@ -213,7 +203,6 @@ const Navbar = () => {
     };
   }, []);
 
-  // --- Handle Window Resize ---
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) {
@@ -224,12 +213,7 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- Toggle Node Expansion (Collapse Other Branches) ---
   const handleToggle = async (node, siblings) => {
-    // Determine whether this node is expandable.
-    // If the API explicitly tells you it has children, or if no explicit flag exists then:
-    // - If children haven't been loaded yet, assume it might be expandable.
-    // - If children are loaded, check if the children array is non-empty.
     let isExpandable = false;
     if (node.hasChildren === true) {
       isExpandable = true;
@@ -239,23 +223,19 @@ const Navbar = () => {
       isExpandable = !node.childrenLoaded || (node.children && node.children.length > 0);
     }
 
-    // If not expandable, just set it as the active node.
     if (!isExpandable) {
       setActiveNodeId(node.id);
       return;
     }
 
-    // Toggle expansion state (and collapse sibling branches)
     setExpanded((prev) => {
       const newExpanded = { ...prev };
       if (prev[node.id]) {
-        // Collapse this branch.
         const descendantNodes = flattenTree([node]);
         descendantNodes.forEach((n) => {
           delete newExpanded[n.id];
         });
       } else {
-        // Collapse other sibling branches.
         siblings.forEach((sibling) => {
           if (sibling.id !== node.id) {
             const descendantNodes = flattenTree([sibling]);
@@ -270,15 +250,12 @@ const Navbar = () => {
     });
     setActiveNodeId(node.id);
 
-    // If children haven't been loaded, fetch them.
     if (!node.childrenLoaded) {
       await fetchChildren(node.id);
     }
   };
 
-  // --- Render the Navigation Tree ---
   const renderTree = (node, siblings, level = 0) => {
-    // Determine expandability using the same logic as in handleToggle.
     const isExpandable = node.hasChildren === true
       ? true
       : node.hasChildren === false
@@ -315,7 +292,6 @@ const Navbar = () => {
     );
   };
 
-  // --- Render the Modal's Status View (Only First-Level Children) ---
   const renderModalStatus = () => {
     const activeNode = activeNodeId ? findNodeById(treeData, activeNodeId) : null;
     if (!activeNode || !activeNode.children || activeNode.children.length === 0) {
