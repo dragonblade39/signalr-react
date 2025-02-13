@@ -475,7 +475,8 @@ body {
  }
   
  .status-indicator i {
-  font-size: 0.8rem;
+  font-size: 1rem;
+  margin-bottom: 5px;
  }
  
  .active-icon {

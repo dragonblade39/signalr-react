@@ -41,9 +41,13 @@ const Navbar = () => {
   const buildTree = (flatArray) => {
     const map = new Map();
     const roots = [];
+    
     flatArray.forEach((node) => {
-      map.set(node.id, { ...node, children: [] });
+      // Ensure a fresh node copy with default properties
+      const newNode = { ...node, children: [], hasChildren: false, childrenLoaded: false };
+      map.set(node.id, newNode);
     });
+    
     flatArray.forEach((node) => {
       const currentNode = map.get(node.id);
       if (node.parentId === null || node.parentId === 0) {
@@ -52,11 +56,16 @@ const Navbar = () => {
         const parent = map.get(node.parentId);
         if (parent) {
           parent.children.push(currentNode);
+          parent.hasChildren = true; // Mark the parent as having children
         }
       }
     });
+  
+    // Return the roots with their expandability set
     return roots;
   };
+  
+  
 
   const flattenTree = (nodes) => {
     let list = [];
@@ -97,12 +106,16 @@ const Navbar = () => {
     });
   };
 
+  // Fetch top-level nodes and initialize tree state
   const fetchTopLevelNodes = async () => {
     try {
       const cacheKey = "topLevelNodes";
       const cachedData = getCache(cacheKey);
+      
+      // Check for cached data
       if (cachedData) {
-        setTreeData(buildTree(cachedData));
+        const tree = buildTree(cachedData);
+        setTreeData(tree);
         setNodeStatuses((prev) => {
           const updated = { ...prev };
           cachedData.forEach((node) => {
@@ -111,9 +124,12 @@ const Navbar = () => {
           return updated;
         });
       }
+  
+      // If no cached data, fetch from API
       const response = await axios.get(API_URL);
       if (response.data) {
-        setTreeData(buildTree(response.data));
+        const tree = buildTree(response.data);
+        setTreeData(tree);
         setNodeStatuses((prev) => {
           const updated = { ...prev };
           response.data.forEach((node) => {
@@ -167,25 +183,29 @@ const Navbar = () => {
     const connection = new HubConnectionBuilder()
       .withUrl("https://localhost:7068/treeNodeHub", { withCredentials: true })
       .build();
-
+  
     connection
       .start()
       .then(() => {
         console.log("Connected to SignalR hub");
         connection.on("ReceiveTreeNode", (newTreeNode) => {
           setTreeData((prevTree) => {
+            // Flatten the existing tree
             const flat = flattenTree(prevTree);
-            const exists = flat.some((node) => node.id === newTreeNode.id);
-            let updatedFlat;
-            if (exists) {
-              updatedFlat = flat.map((node) =>
-                node.id === newTreeNode.id ? { ...node, ...newTreeNode } : node
-              );
-            } else {
-              updatedFlat = [...flat, newTreeNode];
-            }
+            const updatedFlat = flat.map((node) => 
+              node.id === newTreeNode.id 
+                ? { ...node, ...newTreeNode, childrenLoaded: true } 
+                : node
+            );
+  
+            // Check if the node has children based on the received node's data
+            const hasChildren = newTreeNode.children && newTreeNode.children.length > 0;
+            updatedFlat.push({ ...newTreeNode, hasChildren });
+  
+            // Rebuild and return the tree
             return buildTree(updatedFlat);
           });
+          
           setNodeStatuses((prev) => ({
             ...prev,
             [newTreeNode.id]: newTreeNode.isActive,
@@ -194,9 +214,9 @@ const Navbar = () => {
         });
       })
       .catch((err) => console.error("Error while starting SignalR connection: " + err));
-
+  
     fetchTopLevelNodes();
-    const intervalId = setInterval(fetchTopLevelNodes, 2000);
+    const intervalId = setInterval(fetchTopLevelNodes, 500);
     return () => {
       connection.stop();
       clearInterval(intervalId);
@@ -214,20 +234,16 @@ const Navbar = () => {
   }, []);
 
   const handleToggle = async (node, siblings) => {
-    let isExpandable = false;
-    if (node.hasChildren === true) {
-      isExpandable = true;
-    } else if (node.hasChildren === false) {
-      isExpandable = false;
-    } else {
-      isExpandable = !node.childrenLoaded || (node.children && node.children.length > 0);
-    }
-
+    // Determine whether this node is expandable using its properties
+    let isExpandable = node.hasChildren 
+    ?? (!node.childrenLoaded || 
+    (node.children && node.children.length > 0));
+  
     if (!isExpandable) {
       setActiveNodeId(node.id);
       return;
     }
-
+  
     setExpanded((prev) => {
       const newExpanded = { ...prev };
       if (prev[node.id]) {
@@ -249,21 +265,17 @@ const Navbar = () => {
       return newExpanded;
     });
     setActiveNodeId(node.id);
-
+  
     if (!node.childrenLoaded) {
       await fetchChildren(node.id);
     }
   };
 
   const renderTree = (node, siblings, level = 0) => {
-    const isExpandable = node.hasChildren === true
-      ? true
-      : node.hasChildren === false
-        ? false
-        : (!node.childrenLoaded || (node.children && node.children.length > 0));
-
+    const isExpandable = node.children && node.children.length > 0;
+  
     const isExpanded = expanded[node.id];
-
+  
     return (
       <div key={node.id} className={`tree-node level-${level}`}>
         <div className="node-header node-label">
@@ -276,18 +288,22 @@ const Navbar = () => {
               )}
             </span>
           )}
+          <span className="status-indicator">
+            <i className={`bi bi-circle-fill ${nodeStatuses[node.id] ? "active-icon" : "inactive-icon"}`}></i>
+          </span>&nbsp;
           <span className="node-title" onClick={() => handleToggle(node, siblings)}>
             {node.label}
           </span>
         </div>
-        {isExpanded &&
-          (node.children && node.children.length > 0 ? (
+        {isExpanded && (
+          node.children && node.children.length > 0 ? (
             <div className="node-children">
               {node.children.map((child) => renderTree(child, node.children, level + 1))}
             </div>
           ) : node.childrenLoaded ? null : (
             <div className="node-children loading">Loading...</div>
-          ))}
+          )
+        )}
       </div>
     );
   };
@@ -326,7 +342,7 @@ const Navbar = () => {
       <div className={`left-navbar ${isNavbarOpen ? "open" : "closed"}`} ref={navbarRef}>
         {treeData.length > 0 ? treeData.map((node) => renderTree(node, treeData)) : <p>Loading data...</p>}
       </div>
-      <div className="active-status-container">
+      {/* <div className="active-status-container">
         <h4>Active Node Status</h4>
         {activeNode ? (
           <p>
@@ -356,7 +372,7 @@ const Navbar = () => {
             <div className="modal-body">{renderModalStatus()}</div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
