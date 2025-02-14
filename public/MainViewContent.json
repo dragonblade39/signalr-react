@@ -1,0 +1,162 @@
+{
+  "Section1": {
+    "field1": [
+      {
+        "name": "tagName",
+        "label": "Tag Name:",
+        "type": "text",
+        "size": 35
+      },
+      {
+        "name": "itemName",
+        "label": "Item Name #:",
+        "type": "text",
+        "size": 35
+      },
+      {
+        "name": "applicationImageVersion",
+        "label": "Application IV:",
+        "type": "text",
+        "size": 35
+      },
+      {
+        "name": "controllerCommand",
+        "label": "Controller Command:",
+        "type": "select",
+        "disabled": true,
+        "options": [
+          { "value": "NONE", "text": "NONE" },
+          { "value": "Option1", "text": "Option1" },
+          { "value": "Option2", "text": "Option2" }
+        ]
+      },
+      {
+        "name": "associatedAsset",
+        "label": "AssociatedAsset:",
+        "type": "text",
+        "size": 35
+      },
+      {
+        "name": "targetPlatform",
+        "label": "Target Platform (Model):",
+        "type": "select",
+        "disabled": true,
+        "options": [
+          { "value": "NONE", "text": "NONE" },
+          { "value": "Option1", "text": "Option1" },
+          { "value": "Option2", "text": "Option2" }
+        ]
+      },
+      {
+        "label": "Platform Type:"
+      }
+    ],
+    "field2": [
+      {
+        "label": "Network Address Configuration"
+      },
+      {
+        "label": "Device Index",
+        "type": "text",
+        "size": 35
+      },
+      {
+        "label": "Ethernet IP Address",
+        "value": "10.78.80.51"
+      },
+      {
+        "label": "Certificate Authority IP Address"
+      }
+    ],
+    "field3": [
+      {
+        "label": "Ethernet Protocols Supported",
+        "type": "checkbox",
+        "optionLabel": "EtherNet/IP"
+      }
+    ],
+    "field4": [
+      {
+        "label": "Controller State",
+        "value": "NOTLOADED"
+      },
+      {
+        "label": "Redundancy Role",
+        "value": "UNDEFINED"
+      },
+      {
+        "label": "Synchronization State",
+        "value": "----"
+      }
+    ]
+  },
+
+  "Section2": {
+    "field1": [
+      {
+        "label": "Enable Extended CC-PCNT02 Feature Configuration",
+        "description": "Checking this box indicates that the downloaded controller image will support extended features, such as Experion Profit Control and Ethernet Interface Module"
+      },
+      {
+        "label": "Feature Configuration #"
+      },
+      {
+        "type": "checkbox",
+        "label": "Enable Extended Feature Configuration"
+      },
+      {
+        "label": "Controller Capability:"
+      }
+    ],
+    "field2": [
+      {
+        "label": "Redundancy Configuration"
+      },
+      {
+        "type": "checkbox",
+        "label": "Module is redundant"
+      },
+      {
+        "label": "Secondary Tag Name"
+      }
+    ],
+    "field3": [
+      {
+        "label": "EtherNet/IP Communication Mode"
+      },
+      {
+        "label": "Communication Mode:",
+        "type": "select",
+        "disabled": true,
+        "options": [
+          { "value": "NONE", "text": "Direct Connection" },
+          { "value": "Option1", "text": "Option1" },
+          { "value": "Option2", "text": "Option2" }
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Reset EIM Associations",
+        "disabled": true
+      }
+    ],
+    "field4": [
+      {
+        "label": "Advanced Configuration"
+      },
+      {
+        "type": "checkbox",
+        "label": "Alarming Enabled"
+      },
+      {
+        "type": "checkbox",
+        "label": "Disable Memory Retention and Alerts"
+      },
+      {
+        "label": "Temperature High Alarm (degC)",
+        "type": "text",
+        "size": 33
+      }
+    ]
+  }
+}

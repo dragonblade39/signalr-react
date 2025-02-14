@@ -1,0 +1,238 @@
+.Component1__container {
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    margin-top: 40px;
+    margin-left: 390px;
+    background-color: #f8f9fa;
+    width: 63%;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #ddd; /* Light border for definition */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions on hover */
+    border: 1px solid black;
+}
+
+
+
+.Component1__options-container {
+    margin: 10px;
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: flex-start;
+}
+
+.Component1__option-button {
+    margin: 1px; 
+    flex: 1 0 auto;
+}
+
+.Component1__show {
+    max-height: 500px;
+}
+
+.Component1__hide {
+    max-height: 0;
+}
+
+.Component1__selected {
+    background-color: rgb(212, 210, 210);
+}
+
+.Component1__hovered {
+    background-color: rgb(212, 210, 210);
+}
+
+.Component1__error-message {
+    color: #dc3545;
+    text-align: center;
+    width: 100%;
+}
+
+.Component1__sticky-buttons {
+    border-top: 1px solid black;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    position: sticky; /* Stick to the scroll */
+    bottom: 0; /* Stick to the bottom of the parent container */
+    background-color: #f8f9fa; /* Sets background to differentiate from content */
+    z-index: 100; /* Ensure visibility above other elements */
+}
+
+.Component1__double-clicked {
+    background-color: #007bff; 
+    color: white; 
+}
+
+.toggle-parameters {
+    font-size: smaller;
+}
+
+.button-group {
+    display: flex;
+    gap:10px;
+}
+
+.Component1__sticky-button:hover {
+    background-color: #0056b3; 
+}
+
+.MainContent__container {
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+    background-color: #f9f9f9;
+    font-family: "Arial", sans-serif;
+    color: #333;
+    border: black 1.5px;
+    overflow: hidden;
+    font-size: 12px;
+    
+}
+
+.MainContent__content-container {
+    border-top: 1px solid black;
+    display: flex;
+    flex-direction: row;
+    max-height: 65vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+
+.MainContent__left-section,
+.MainContent__right-section {
+    flex: 1;
+    padding: 10px;
+    border-radius: 2px;
+    margin: 0;
+}
+
+.MainContent__left-section {
+    padding-right: 5px;
+}
+
+.MainContent__right-section {
+    padding-left: 5px;
+}
+
+.MainContent__section-heading {
+    font-size: 15px;
+    font-weight: bold;
+    padding-bottom: 5px;
+}
+
+.MainContent__field-box {
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 5px;
+    padding: 5px; 
+    border: 1.5px solid #ddd;
+}
+
+.MainContent__field-box label {
+    margin-right: 10px; 
+    font-size: 12px; 
+}
+
+.MainContent__section-box {
+    margin-bottom: 5px;
+    padding: 15px;
+    border: 1px solid #bbb;
+    background: #f9f9f9;
+}
+
+.MainContent__description-text {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+    font-style: italic;
+}
+
+.MainContent__field-box input[type="text"],
+.MainContent__field-box select {
+    flex: 1; 
+    padding: 5px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.MainContent__field-box input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.MainContent__action-button {
+    padding: 10px 15px;
+    font-size: 12px;
+    font-weight: bold;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.MainContent__action-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.MainContent__action-button:hover {
+    background-color: #0056b3;
+}
+
+.MainContent__toggle-button {
+    display: none;
+    background-color: #0056b3;
+    color: white;
+    font-size: 16px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+}
+
+.MainContent__toggle-button:hover {
+    background-color: #003f80;
+}
+
+@media (max-width: 770px) {
+    .MainContent__toggle-button {
+        display: block;
+    }
+
+    .MainContent__options-container {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .MainContent__options-container.show {
+        display: flex;
+    }
+
+    .MainContent__content-container {
+        flex-direction: column;
+    }
+
+    .MainContent__left-section,
+    .MainContent__right-section {
+        width: 100%;
+    }
+}
+
+@media (max-width: 426px) {
+    .MainContent__field-box input[type="text"],
+    .MainContent__field-box select {
+        width: 90%;
+    }
+}

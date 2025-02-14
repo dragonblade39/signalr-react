@@ -1,0 +1,161 @@
+{
+    "Section1": {
+        "field1": [
+            {
+                "name": "tagName",
+                "label": "Param_TN:",
+                "type": "text",
+                "size": 35
+            },
+            {
+                "name": "itemName",
+                "label": "Param_IN:",
+                "type": "text",
+                "size": 35
+            },
+            {
+                "name": "applicationImageVersion",
+                "label": "Param_Image Version:",
+                "type": "text",
+                "size": 35
+            },
+            {
+                "name": "controllerCommand",
+                "label": "Param_CC:",
+                "type": "select",
+                "disabled": true,
+                "options": [
+                    { "value": "NONE", "text": "NONE" },
+                    { "value": "Option1", "text": "Option1" },
+                    { "value": "Option2", "text": "Option2" }
+                ]
+            },
+            {
+                "name": "associatedAsset",
+                "label": "Param_AA:",
+                "type": "text",
+                "size": 35
+            },
+            {
+                "name": "targetPlatform",
+                "label": "Param_TP:",
+                "type": "select",
+                "disabled": true,
+                "options": [
+                    { "value": "NONE", "text": "NONE" },
+                    { "value": "Option1", "text": "Option1" },
+                    { "value": "Option2", "text": "Option2" }
+                ]
+            },
+            {
+                "label": "Param_PlatformType:"
+            }
+        ],
+        "field2": [
+            {
+                "label": "Param_NetworkAddressConfiguration"
+            },
+            {
+                "label": "Param_DI",
+                "type": "text",
+                "size": 35
+            },
+            {
+                "label": "Param_EIP:",
+                "value": "10.78.80.51"
+            },
+            {
+                "label": "Param_CAIP:"
+            }
+        ],
+        "field3": [
+            {
+                "label": "Param_EPS:",
+                "type": "checkbox",
+                "optionLabel": "EtherNet/IP"
+            }
+        ],
+        "field4": [
+            {
+                "label": "Param_CS:",
+                "value": "NOTLOADED"
+            },
+            {
+                "label": "Param_RR:",
+                "value": "UNDEFINED"
+            },
+            {
+                "label": "Param_SS:",
+                "value": "----"
+            }
+        ]
+    },
+    "Section2": {
+        "field1": [
+            {
+                "label": "P_EE_F:",
+                "description": "Checking this box indicates that the downloaded controller image will support extended features, such as Experion Profit Control and Ethernet Interface Module"
+            },
+            {
+                "label": "Param_FC:"
+            },
+            {
+                "type": "checkbox",
+                "label": "Param_EEFC:"
+            },
+            {
+                "label": "Param_CC:"
+            }
+        ],
+        "field2": [
+            {
+                "label": "Param_RC:"
+            },
+            {
+                "type": "checkbox",
+                "label": "Param_MIR:"
+            },
+            {
+                "label": "Param_STN:"
+            }
+        ],
+        "field3": [
+            {
+                "label": "Param_EIPCM:"
+            },
+            {
+                "label": "Param_CM:",
+                "type": "select",
+                "disabled": true,
+                "options": [
+                    { "value": "NONE", "text": "DirectConnection" },
+                    { "value": "Option1", "text": "Option1" },
+                    { "value": "Option2", "text": "Option2" }
+                ]
+            },
+            {
+                "type": "button",
+                "label": "Param_REIM:",
+                "disabled": true
+            }
+        ],
+        "field4": [
+            {
+                "label": "Param_AC:"
+            },
+            {
+                "type": "checkbox",
+                "label": "Param_AE:"
+            },
+            {
+                "type": "checkbox",
+                "label": "Param_DMRA:"
+            },
+            {
+                "label": "Param_THADC:",
+                "type": "text",
+                "size": 33
+            }
+        ]
+    }
+}

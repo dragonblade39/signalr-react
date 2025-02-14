@@ -1,0 +1,21 @@
+{
+  "options":[
+    "Security Options",
+    "Control and I/O Network",
+    "Server History",
+    "Server Displays",
+    "Control Confirmation",
+    "QVCS",
+    "Identification",
+    "System Time",
+    "Main",
+    "Statistics",
+    "Peer Connections",
+    "Hardware Information",
+    "FTE",
+    "UDP/TCP",
+    "IP/ICMP",
+    "Soft Failures"
+  ]
+}
+  
